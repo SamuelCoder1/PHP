@@ -43,12 +43,14 @@ class UserController extends Controller
     public function show(string $id)
     {
         try {
-            $user = User::find($id);
+            $user = User::findOrFail($id); // Cambiado a findOrFail
             return view('users.show', compact('user'));
         } catch (\Exception $e) {
-            // si ocurre un error, enviar mensaje a Discord o Slack
+
+            return redirect()->route('usuarios.index')->with('error', 'Usuario no encontrado.');
         }
     }
+
 
     /**
      * Show the form for editing the specified resource.
@@ -93,15 +95,28 @@ class UserController extends Controller
         }
     }
 
-    public function showWithTrashed(string $id)
+    public function trashed()
     {
         try {
-            $user = User::withTrashed()->find($id); 
-
-            return view('users.show', compact('user')); 
-
+            $users = User::onlyTrashed()->paginate(10); 
+            return view('users.trashed', compact('users')); 
+        
         } catch (\Exception $e) {
-
+            return redirect()->route('usuarios.index')->with('error', 'Error al cargar los usuarios eliminados.');
         }
     }
+
+
+    public function restore(string $id)
+    {
+        try {
+            $user = User::withTrashed()->findOrFail($id);
+            $user->restore();
+
+            return redirect()->route('usuarios.index')->with('success', 'Usuario restaurado exitosamente.');
+        } catch (\Exception $e) {
+            return redirect()->route('usuarios.index')->with('error', 'Error al restaurar el usuario.');
+        }
+    }
+
 }

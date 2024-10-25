@@ -6,11 +6,11 @@
 
         <x-validation-errors class="mb-4" />
 
-        @session('status')
+        @if (session('status'))
             <div class="mb-4 font-medium text-sm text-green-600">
-                {{ $value }}
+                {{ session('status') }}
             </div>
-        @endsession
+        @endif
 
         <form method="POST" action="{{ route('login') }}">
             @csrf
@@ -44,5 +44,15 @@
                 </x-button>
             </div>
         </form>
+
+        <div class="mt-6">
+            <hr class="my-6" />
+            <p class="text-center text-sm text-gray-600">{{ __('Or') }}</p>
+            <div class="flex justify-center mt-4">
+
+                <a href="{{ route('google.login') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-black rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"> Iniciar sesion con Google </a>
+
+            </div>
+        </div>
     </x-authentication-card>
 </x-guest-layout>
