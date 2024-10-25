@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Auth; // Añadir esta línea
 use Laravel\Telescope\Http\Middleware\Authorize;
 use Laravel\Telescope\Watchers;
 
@@ -86,8 +87,9 @@ return [
     |--------------------------------------------------------------------------
     */
     'gate' => function ($user) {
-        return auth()->check(); // Permitir solo si el usuario está autenticado
+    return Auth::check(); // Permitir solo si el usuario está autenticado
     },
+
 
     /*
     |--------------------------------------------------------------------------
