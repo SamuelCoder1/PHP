@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\GoogleUser;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Http\Request;
 
@@ -12,7 +12,6 @@ class GoogleController extends Controller
 {
     public function login()
     {
-        // Redirigir a Google
         return Socialite::driver('google')->redirect();
     }
 
@@ -22,24 +21,46 @@ class GoogleController extends Controller
             // Obtener datos del usuario de Google
             $user_google = Socialite::driver('google')->user();
 
-            // Buscar el usuario por correo
+            // Buscar el usuario en tu base de datos
             $user = User::where('email', $user_google->email)->first();
 
-            // Si no existe, crearlo
-            if (!$user) {
+            if ($user) {
+                // Si existe, iniciar sesión con el usuario
+                Auth::login($user);
+            } else {
+                // Si no existe, crear un nuevo usuario
                 $user = User::create([
-                    'name' => $user_google->name,
+                    'names' => $user_google->name,
                     'email' => $user_google->email,
-                    'password' => Hash::make(rand(100000, 999999)), // Generar contraseña aleatoria
                 ]);
+
+                // Crear un registro en GoogleUser
+                GoogleUser::create([
+                    'email' => $user_google->email,
+                    'name' => $user_google->name,
+                    'user_id' => $user->id,
+                ]);
+
+                // Iniciar sesión con el nuevo usuario
+                Auth::login($user);
             }
 
-            // Iniciar sesión
-            Auth::login($user);
-
-            return redirect()->route('usuarios.index')->with('success', 'Sesión iniciada exitosamente');
+            // Redirigir a la vista de usuarios con un mensaje de éxito
+            return redirect()->route('usuarios.index')->with('success', 'Has iniciado sesión correctamente');
         } catch (\Exception $e) {
-            return redirect()->route('login')->with('error', 'Hubo un error al iniciar sesión con Google. Intenta de nuevo.');
+            \Log::error('Google login error:', ['message' => $e->getMessage()]);
+            return redirect()->route('auth.google')->with('error', 'Error al iniciar sesión con Google.');
         }
     }
+
+    public function logout()
+    {
+        // Cierra la sesión del usuario actual
+        Auth::logout();
+
+        // Redirige a la página de login
+        return redirect()->route('login')->with('success', 'Has cerrado sesión correctamente.');
+    }
+
+
 }
