@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use PHPUnit\Exception;
+use App\Http\Requests\UserCreateFormRequest;
+use App\Http\Requests\UserUpdateFormRequest;
 
 class UserController extends Controller
 {
@@ -17,7 +18,8 @@ class UserController extends Controller
             $users = User::paginate(10);
             return view('users.index', compact('users'));
         } catch (\Exception $e) {
-            // si ocurre un error, enviar mensaje a Discord o Slack
+            // Manejo de error (puedes enviar un mensaje a Discord o Slack)
+            return redirect()->route('usuarios.index')->with('error', 'Error al cargar los usuarios.');
         }
     }
 
@@ -26,15 +28,24 @@ class UserController extends Controller
      */
     public function create()
     {
-        //
+        return view('users.create');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(UserCreateFormRequest $request)
     {
-        //
+
+        User::create([
+            'names' => $request->names,
+            'lastnames' => $request->lastnames,
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
+            'address' => $request->address,
+        ]);
+
+        return redirect()->route('usuarios.index')->with('success', 'Usuario creado exitosamente.');
     }
 
     /**
@@ -43,43 +54,46 @@ class UserController extends Controller
     public function show(string $id)
     {
         try {
-            $user = User::findOrFail($id); // Cambiado a findOrFail
+            $user = User::findOrFail($id);
             return view('users.show', compact('user'));
         } catch (\Exception $e) {
-
             return redirect()->route('usuarios.index')->with('error', 'Usuario no encontrado.');
         }
     }
-
 
     /**
      * Show the form for editing the specified resource.
      */
     public function edit(string $id)
     {
-        try{
-            $user = User::find($id);
+        try {
+            $user = User::findOrFail($id);
             return view('users.edit', compact('user'));
-
-        }catch(\Exception $e){
-            // si ocurre un error, enviar mensaje a Discord o Slack
+        } catch (\Exception $e) {
+            return redirect()->route('usuarios.index')->with('error', 'Error al cargar el usuario.');
         }
-        //
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UserUpdateFormRequest $request, string $id)
     {
+
         try {
-            $user = User::find($id)->update($request->all());
-            return redirect()->route('usuarios.index')->with('success', 'Se ha actualizado correctamente');
+            $user = User::findOrFail($id);
+            $user->name = $request->input('name');
+            $user->email = $request->input('email');
+            if ($request->input('password')) {
+                $user->password = bcrypt($request->input('password'));
+            }
+            $user->save();
+
+            return redirect()->route('usuarios.index')->with('success', 'Usuario actualizado correctamente.');
         } catch (\Exception $e) {
-            // si ocurre un error, enviar mensaje a Discord o Slack
+            return redirect()->route('usuarios.index')->with('error', 'Error al actualizar el usuario.');
         }
     }
-
 
     /**
      * Remove the specified resource from storage.
@@ -87,36 +101,32 @@ class UserController extends Controller
     public function destroy(string $id)
     {
         try {
-            $user = User::find($id)->delete();
-            return back()->with('success','Se ha eliminado correctamente');
-
+            $user = User::findOrFail($id);
+            $user->delete();
+            return redirect()->route('usuarios.index')->with('success', 'Usuario eliminado correctamente.');
         } catch (\Exception $e) {
-            // si ocurre un error, enviar mensaje a Discord o Slack
+            return redirect()->route('usuarios.index')->with('error', 'Error al eliminar el usuario.');
         }
     }
 
     public function trashed()
     {
         try {
-            $users = User::onlyTrashed()->paginate(10); 
-            return view('users.trashed', compact('users')); 
-        
+            $users = User::onlyTrashed()->paginate(10);
+            return view('users.trashed', compact('users'));
         } catch (\Exception $e) {
             return redirect()->route('usuarios.index')->with('error', 'Error al cargar los usuarios eliminados.');
         }
     }
-
 
     public function restore(string $id)
     {
         try {
             $user = User::withTrashed()->findOrFail($id);
             $user->restore();
-
             return redirect()->route('usuarios.index')->with('success', 'Usuario restaurado exitosamente.');
         } catch (\Exception $e) {
             return redirect()->route('usuarios.index')->with('error', 'Error al restaurar el usuario.');
         }
     }
-
 }

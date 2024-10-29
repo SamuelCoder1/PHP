@@ -18,7 +18,7 @@
                     <div>
                         <a href="/" class="text-white text-decoration-none me-3">Inicio</a>
                         @auth
-                            <a href="{{ route('dashboard') }}" class="text-white text-decoration-none me-3">Dashboard</a>
+                            <a href="{{ route('usuarios.index') }}" class="text-white text-decoration-none me-3">Ir a inicio</a>
                             <a href="{{ route('usuarios.index') }}" class="text-white text-decoration-none">Usuarios</a>
                         @endauth
                     </div>

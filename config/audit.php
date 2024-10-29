@@ -17,6 +17,7 @@ return [
 
     'implementation' => OwenIt\Auditing\Models\Audit::class,
 
+    
     /*
     |--------------------------------------------------------------------------
     | User Morph prefix & Guards

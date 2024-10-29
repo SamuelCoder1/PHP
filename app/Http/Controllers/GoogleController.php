@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\GoogleUser;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class GoogleController extends Controller
 {
@@ -53,14 +53,13 @@ class GoogleController extends Controller
         }
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
         // Cierra la sesión del usuario actual
-        Auth::logout();
+        Auth::guard('web')->logout();
 
         // Redirige a la página de login
         return redirect()->route('login')->with('success', 'Has cerrado sesión correctamente.');
     }
-
 
 }
